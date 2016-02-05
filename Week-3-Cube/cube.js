@@ -1,15 +1,17 @@
 var vshader_src =
-       'attribute vec4 vPosition;\n\
+       'attribute vec4 a_Position;\n\
+	attribute vec4 a_Color;\n\
+	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_Position = vPosition;\n\
+		gl_Position = a_Position;\n\
+		v_Color = a_Color;\n\
 	}';
 
-//vPosition.xyz -= vec2(0.5); vPosition.xyz *= 1.5 / 1.0;
-
 var fshader_src =
-       'precision highp float;\n\
+       'precision mediump float;\n\
+	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
+		gl_FragColor = v_Color;\n\
 	}';
 
 var Cube = {
@@ -77,13 +79,29 @@ function init() {
 	}
 	gl.bindBuffer(gl.ARRAY_BUFFER, Cube.positions.buffer);
 	gl.bufferData(gl.ARRAY_BUFFER, Cube.positions.values, gl.STATIC_DRAW);
-	var vPosition = gl.getAttribLocation(gl.program, 'vPosition');
-	if (vPosition < 0) {
-		alert("Failed to get vPosition");
+	var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+	if (a_Position < 0) {
+		alert("Failed to get a_Position");
 		return;
 	}
-	gl.vertexAttribPointer(vPosition, Cube.positions.components, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vPosition);
+	gl.vertexAttribPointer(a_Position, Cube.positions.components, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(a_Position);
+
+	// Pass the colors to the vertex shader
+        Cube.colors.buffer = gl.createBuffer();
+        if (!Cube.colors.buffer) {
+                console.log('Failed to create buffer for colors');
+                return;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, Cube.colors.buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, Cube.colors.values, gl.STATIC_DRAW);
+        var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+        if (a_Color < 0) {
+                alert("Failed to get a_Color");
+                return;
+        }
+        gl.vertexAttribPointer(a_Color, 3/*RGB*/, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Color);
 	
 	// Pass the indices to the vertext shader
 	Cube.indices.buffer = gl.createBuffer();

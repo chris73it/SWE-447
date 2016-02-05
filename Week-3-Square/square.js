@@ -1,34 +1,38 @@
 var vshader_src =
-       'attribute vec4 vPosition;\n\
+       'attribute vec4 a_Position;\n\
+	attribute vec4 a_Color;\n\
+	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_Position = vPosition;\n\
+		gl_Position = a_Position;\n\
+		gl_Position.xy -= vec2(0.5);\n\
+		gl_Position.xy *= 1.5 / 1.0;\n\
+		v_Color = a_Color;\n\
 	}';
-
-//vPosition.xy -= vec2(0.5); vPosition.xy *= 1.5 / 1.0;
 
 var fshader_src =
        'precision highp float;\n\
+	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
+		gl_FragColor = v_Color;\n\
 	}';
 
 var Square = {
 	count : 4,
 	positions : {
 		values : new Float32Array([
-			-1.0, -1.0, // Vertex 0
-			 1.0, -1.0, // Vertex 1
-			 1.0, 1.0,  // Vertex 2
-			-1.0, 1.0   // Vertex 3
+			 0.0, 0.0, // Vertex 0
+			 1.0, 0.0, // Vertex 1
+			 1.0, 1.0, // Vertex 2
+			 0.0, 1.0  // Vertex 3
 		]),
 		components : 2
 	},
 	colors : {
 		values : new Float32Array([
-			1,0,0, // Vertex 0 (red)
-			0,1,0, // Vertex 1 (green)
-			0,0,1, // Vertex 2 (blue)
-			0,0,1  // Vertex 3 (blue)
+			0,1,1, // Vertex 0
+			1,0,0, // Vertex 1
+			1,0,1, // Vertex 2
+			0,1,0  // Vertex 3
 		]),
 		components : 3
 	},
@@ -63,14 +67,30 @@ function init() {
 	}
 	gl.bindBuffer(gl.ARRAY_BUFFER, Square.positions.buffer);
 	gl.bufferData(gl.ARRAY_BUFFER, Square.positions.values, gl.STATIC_DRAW);
-	var vPosition = gl.getAttribLocation(gl.program, 'vPosition');
-	if (vPosition < 0) {
-		alert("Failed to get vPosition");
+	var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+	if (a_Position < 0) {
+		alert("Failed to get a_Position");
 		return;
 	}
-	gl.vertexAttribPointer(vPosition, Square.positions.components, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vPosition);
-	
+	gl.vertexAttribPointer(a_Position, Square.positions.components, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(a_Position);
+
+	// Pass the colors to the vertex shader
+	Square.colors.buffer = gl.createBuffer();
+	if (!Square.colors.buffer) {
+		console.log('Failed to create buffer for colors');
+		return;
+	}
+	gl.bindBuffer(gl.ARRAY_BUFFER, Square.colors.buffer);
+	gl.bufferData(gl.ARRAY_BUFFER, Square.colors.values, gl.STATIC_DRAW);
+	var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+	if (a_Color < 0) {
+		alert("Failed to get a_Color");
+		return;
+	}
+	gl.vertexAttribPointer(a_Color, 3/*RGB*/, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(a_Color);
+
 	// Pass the indices to the vertext shader
 	Square.indices.buffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Square.indices.buffer);
