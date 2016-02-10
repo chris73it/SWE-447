@@ -145,11 +145,11 @@ var Cube = {
 		// Set the clear color for the canvas
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-		Cube.render();
+		Cube.draw();
 	},
 
-	render : function () {
-		window.requestAnimationFrame(Cube.render, canvas);
+	draw: function () {
+		window.requestAnimationFrame(Cube.draw, canvas);
 
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
