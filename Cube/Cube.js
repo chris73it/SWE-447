@@ -139,6 +139,10 @@ var Cube = {
 
 		// Pass the indices to the vertext shader
 		Cube.indices.buffer = gl.createBuffer();
+		if (!Cube.indices.buffer) {
+			console.log('Failed to create buffer for indices');
+			return;
+		}
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cube.indices.buffer);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, Cube.indices.values, gl.STATIC_DRAW);
 
