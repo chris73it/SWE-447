@@ -66,7 +66,16 @@ var Cylinder = {
 		components : 3
 	},
 
-	indices : { // Let init() fill this one up
+	indices : {
+		// Let init() fill this one up
+		// Reserved for the 2 bases
+		// (uses a TRIANGLE_FAN approach)
+	},
+
+	indices2 : {
+		// Let init() fill this one up
+		// Reserved for the lateral side
+		// (uses a TRIANGLE_STRIP approach)
 	},
 
 	init : function() {
@@ -105,10 +114,10 @@ var Cylinder = {
 		}
 		indices.push(1);  // Add the first perimeter vertex's index to close the disk
 
-		// Create vertices and indeces for second base of Cylinder
+		// Create vertices and indices for second base of Cylinder
 		indices = indices.concat(indices);
 		positions.push(0.0, 0.0, 1.0);
-		indices[numSides+2] = numSides + 1; // start with the center of the triangle fan
+		indices[numSides+2] = numSides + 1; // start with the second center of the triangle fan
 		for (var i = 0; i < numSides; ++i) {
 			var theta = i * dTheta;
 			var x = Math.cos(theta), y = Math.sin(theta), z = 1.0;
@@ -117,10 +126,14 @@ var Cylinder = {
 		}
 		indices.push(numSides+2); // Add the first perimeter vertex's index to close the disk
 
-		// Create triangles for side of Cylinder
-		for (var i = 0; i < numSides; ++i) {
-			//indices.push(i+1);//FIXME
+		// Create triangles for lateral side of Cylinder
+		var indices2 = [ 1 ]; // Add the first perimeter vertex index in the first base ..
+		var indices2 = [numSides+2]; // .. and add the first perimeter vertex of the second base
+		for (var i = 0; i < numSides - 1; ++i) {
+			indices2.push(numSides + i + 3);
+			indices2.push(i + 2);
 		}
+		var indices2 = indices2.push(numSides+2); // Add the first perimeter vertex to close the strip
 
 		// Create a vertex buffer for vertex positions
 		Cylinder.positions.buffer = gl.createBuffer();
@@ -150,7 +163,7 @@ var Cylinder = {
 			return;
 		}
 
-		// Pass the indices to the vertext shader
+		// Pass the indices to the vertext shader for the 2 circles
 		Cylinder.indices.buffer = gl.createBuffer();
 		if (!Cylinder.indices.buffer) {
 			console.log('Failed to create buffer for indices');
@@ -158,6 +171,15 @@ var Cylinder = {
 		}
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices.buffer);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+		// Pass the indices to the vertext shader for the lateral side
+		Cylinder.indices2.buffer = gl.createBuffer();
+		if (!Cylinder.indices2.buffer) {
+			console.log('Failed to create buffer for indices2');
+			return;
+		}
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices2.buffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices2), gl.STATIC_DRAW);
 
 		// Set the clear color for the canvas
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -180,17 +202,20 @@ var Cylinder = {
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices.buffer);
 
-		// Render the base of the cone
+		// Render the first base of the Cylinder
 		var count = 10; // We'd really like Cylinder.baseCount, or something else clever
 		var offset = 0;  // Start at the beginning of the buffer
 		gl.drawElements(gl.TRIANGLE_FAN, count, gl.UNSIGNED_SHORT, offset);
 
-		// Render lateral face
-		count = 10;  // Same number of indices for the cone as the base
+		// Render the second base of the Cylinder 
+		count = 10;  // Same number of indices for the Cylinder as the base
 		offset = 10 * /* sizeof(unsigned short) = */ 2;
-
-		// Draw the Cylinder
 		gl.drawElements(gl.TRIANGLE_FAN, count, gl.UNSIGNED_SHORT, offset);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices.buffer);
+		
+		// Render the second base of the Cylinder 
+		gl.drawElements(gl.TRIANGLE_STRIP, Cylinder.indices2.length, gl.UNSIGNED_SHORT, 0);
 	}
 };
 
