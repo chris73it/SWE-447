@@ -11,8 +11,11 @@ var fshader_src =
        'precision mediump float;\n\
 	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_FragColor = v_Color;\n\
+		gl_FragColor = vec4( 1.0, 0.0, gl_FrontFacing ? 1.0 : 0.0, 1.0 );\n\
 	}';
+//gl_FragColor = v_Color;\n\
+
+var numSides = 8;
 
 var Cone = {
 	positions : {
@@ -66,7 +69,8 @@ var Cone = {
 		components : 3
 	},
 
-	indices : { // Let init() fill this one up
+	indices : {
+		// Let init() fill this one up
 	},
 
 	init : function() {
@@ -92,24 +96,29 @@ var Cone = {
 		}
 
 		// Create vertices for Cone
-		var numSides = 8;
 		var dTheta = 2.0 * Math.PI / numSides;
 		var positions = [ 0.0, 0.0, 0.0 ];  // start our positions list with the center point
 		var indices = [ 0 ]; // start with the center of the triangle fan
 		for ( var i = 0; i < numSides; ++i ) {
 			var theta = i * dTheta;
-			var x = Math.cos(theta),
-			y = Math.sin(theta),
-			z = 0.0;
+			var x = Math.cos(theta), y = Math.sin(theta), z = 0.0;
 			positions.push(x, y, z);
-			indices.push(i+1);
+			indices.push(numSides - i);//8..1
 		}
-		indices.push(1);  // Add in the first perimeter vertex's index to close the disk
+		// Add in the first perimeter vertex's index to close the disk
+		indices.push(numSides);//8
 
-		positions.push(0.0, 0.0, 1.0);
 		indices = indices.concat(indices);
+		positions.push(0.0, 0.0, 1.0);
 		indices[numSides + 2] = numSides + 1;// Start with the apex vertex
-		
+		for ( var i = 0; i < numSides; ++i ) {
+			var theta = i * dTheta;
+			var x = Math.cos(theta), y = Math.sin(theta), z = 0.0;
+			positions.push(x, y, z);
+			indices[numSides + 3 + i] = i + 1;//1..8
+		}
+		indices[2*(numSides+2)-1] = 1;
+
 		// Create a vertex buffer for vertex positions
 		Cone.positions.buffer = gl.createBuffer();
 		if (!Cone.positions.buffer) {
@@ -166,19 +175,12 @@ var Cone = {
 		gl.vertexAttribPointer(a_Color, Cone.colors.components, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(a_Color);
 
+		// Render the base of the Cone
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cone.indices.buffer);
+		gl.drawElements(gl.TRIANGLE_FAN, numSides+2, gl.UNSIGNED_SHORT, 0);
 
-		// Render the base of the cone
-		var count = 10; // We'd really like Cone.baseCount, or something else clever
-		var offset = 0;  // Start at the beginning of the buffer
-		gl.drawElements(gl.TRIANGLE_FAN, count, gl.UNSIGNED_SHORT, offset);
-
-		// Render lateral face
-		count = 10;  // Same number of indices for the cone as the base
-		offset = 10 * /* sizeof(unsigned short) = */ 2;
-
-		// Draw the Cone
-		gl.drawElements(gl.TRIANGLE_FAN, count, gl.UNSIGNED_SHORT, offset);
+		// Render lateral side of the Cone
+		gl.drawElements(gl.TRIANGLE_FAN, numSides+2, gl.UNSIGNED_SHORT, 2*(numSides+2));
 	}
 };
 

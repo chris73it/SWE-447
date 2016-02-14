@@ -11,8 +11,9 @@ var fshader_src =
        'precision mediump float;\n\
 	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_FragColor = v_Color;\n\
+		gl_FragColor = vec4( 1.0, 0.0, gl_FrontFacing ? 1.0 : 0.0, 1.0 );\n\
 	}';
+//gl_FragColor = v_Color;\n\
 
 var Cube = {
 	positions : {

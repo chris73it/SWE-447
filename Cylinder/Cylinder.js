@@ -11,8 +11,11 @@ var fshader_src =
        'precision mediump float;\n\
 	varying lowp vec4 v_Color;\n\
 	void main() {\n\
-		gl_FragColor = v_Color;\n\
+		gl_FragColor = vec4( 1.0, 0.0, gl_FrontFacing ? 1.0 : 0.0, 1.0 );\n\
 	}';
+//gl_FragColor = v_Color;\n\
+
+var numSides = 8;
 
 var Cylinder = {
 	positions : {
@@ -100,40 +103,41 @@ var Cylinder = {
 			return;
 		}
 
-		var numSides = 8;
 		var dTheta = 2.0 * Math.PI / numSides;
 
 		// Create vertices and indeces for first base of Cylinder
-		var positions = [ 0.0, 0.0, 0.0 ];  // start our positions list with the center point
+		var positions = [ 0.0, 0.0, 0.0 ]; // start our positions list with the center point
 		var indices = [ 0 ]; // start with the center of the triangle fan
 		for ( var i = 0; i < numSides; ++i ) {
 			var theta = i * dTheta;
 			var x = Math.cos(theta), y = Math.sin(theta), z = 0.0;
 			positions.push(x, y, z);
-			indices.push(i+1);
+			indices.push(numSides - i);//8..1
 		}
-		indices.push(1);  // Add the first perimeter vertex's index to close the disk
+		indices.push(numSides);  // Add the first perimeter vertex's index to close the disk
 
 		// Create vertices and indices for second base of Cylinder
 		indices = indices.concat(indices);
-		positions.push(0.0, 0.0, 1.0);
-		indices[numSides+2] = numSides + 1; // start with the second center of the triangle fan
+		positions.push(0.0, 0.0, 1.0); // restart our positions list with the center point
+		indices[numSides + 2] = numSides + 1; // start with the second center of the triangle fan
 		for (var i = 0; i < numSides; ++i) {
 			var theta = i * dTheta;
 			var x = Math.cos(theta), y = Math.sin(theta), z = 1.0;
 			positions.push(x, y, z);
-			indices[numSides + i + 3] = numSides + i + 2;
+			indices[numSides + 3 + i] = numSides + 2 + i;
 		}
-		indices.push(numSides+2); // Add the first perimeter vertex's index to close the disk
+		// Add the first perimeter vertex's index to close the disk
+		indices[2*(numSides+2)-1] = numSides + 2; 
 
 		// Create triangles for lateral side of Cylinder
-		var indices2 = [ 1 ]; // Add the first perimeter vertex index in the first base ..
-		var indices2 = [numSides+2]; // .. and add the first perimeter vertex of the second base
-		for (var i = 0; i < numSides - 1; ++i) {
-			indices2.push(numSides + i + 3);
-			indices2.push(i + 2);
+		var indices2 = [];
+		indices2.push(numSides * 2 + 1);//17
+		for (var i = 0; i < numSides; ++i) {
+			indices2.push(numSides - i);//8..1
+			indices2.push(numSides + 2 + i);//10..17
 		}
-		var indices2 = indices2.push(numSides+2); // Add the first perimeter vertex to close the strip
+		// Add the first perimeter vertex to close the strip
+		indices2.push(numSides);
 
 		// Create a vertex buffer for vertex positions
 		Cylinder.positions.buffer = gl.createBuffer();
@@ -200,21 +204,13 @@ var Cylinder = {
 		gl.vertexAttribPointer(a_Color, Cylinder.colors.components, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(a_Color);
 
+		// Render the two bases of the Cylinder
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices.buffer);
+		gl.drawElements(gl.TRIANGLE_FAN, numSides+2, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLE_FAN, numSides+2, gl.UNSIGNED_SHORT, 2*(numSides+2));
 
-		// Render the first base of the Cylinder
-		var count = 10; // We'd really like Cylinder.baseCount, or something else clever
-		var offset = 0;  // Start at the beginning of the buffer
-		gl.drawElements(gl.TRIANGLE_FAN, count, gl.UNSIGNED_SHORT, offset);
-
-		// Render the second base of the Cylinder 
-		count = 10;  // Same number of indices for the Cylinder as the base
-		offset = 10 * /* sizeof(unsigned short) = */ 2;
-		gl.drawElements(gl.TRIANGLE_FAN, count, gl.UNSIGNED_SHORT, offset);
-
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices.buffer);
-		
-		// Render the second base of the Cylinder 
+		// Render the lateral side of the Cylinder 
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Cylinder.indices2.buffer);
 		gl.drawElements(gl.TRIANGLE_STRIP, Cylinder.indices2.length, gl.UNSIGNED_SHORT, 0);
 	}
 };
