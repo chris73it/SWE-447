@@ -4,7 +4,6 @@
 
 <head>
     <title>Tiles</title>
-    //<script type="text/javascript" src="../libs/three.js"></script>
     <script src="http://threejs.org/build/three.js"></script>
     <script type="text/javascript" src="../libs/stats.js"></script>
     <script type="text/javascript" src="../libs/dat.gui.js"></script>
@@ -34,12 +33,17 @@
 
         var stats = initStats();
 
+        var currLevel = 0;
+        var levels = [];
+        var rows = [1, 2, 3, 2, 4, 3];
+        var clms = [2, 2, 4, 4, 4, 3];
+
         // create a scene, that will hold all our elements such as objects, cameras and lights.
         var scene = new THREE.Scene();
 
         // create a camera, which defines where we're looking at.
-        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-
+        //var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
         // create a render and set the size
         var renderer = new THREE.WebGLRenderer();
 
@@ -47,26 +51,12 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMapEnabled = true;
 
-        /* create the ground plane
-        var planeGeometry = new THREE.PlaneGeometry(60, 20);
-        var planeMaterial = new THREE.MeshLambertMaterial({color: 0x555555});
-        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.receiveShadow = true;
-
-        // rotate and position the plane
-        plane.rotation.x = -0.5 * Math.PI;
-        plane.position.x = 15;
-        plane.position.y = 0;
-        plane.position.z = 0;
-
-        // add the plane to the scene
-        scene.add(plane);
-*/
-        // create a cube
-        var SIDE = 4.0;
-        function createCube(x,z) {
-            //var cubeGeometry = new THREE.BoxGeometry(SIDE-0.2, 0.5, SIDE-0.2);
-            var cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+        // create cubes
+        var SIDE = 80.0;
+        var HEIGHT = 5;
+        var SPACE = 10;
+        function createCube(level,x,z) {
+            var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
             var cubeMaterial = new THREE.MeshLambertMaterial({color: 0x00ff00});
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.castShadow = true;
@@ -75,24 +65,84 @@
             cube.position.x = SIDE * x;
             cube.position.y = 1.0;
             cube.position.z = SIDE * z;
-            scene.add(cube);
+
+            //scene.add(cube);
+            levels[level][x][z] = cube;
+            return cube;
         }
 
-        // add the cube to the scene
-        createCube(0,0);
-        createCube(1,0);
-        createCube(0,1);
-        createCube(1,1);
+        //level 0
+        levels[0] = create2DArray(rows[0]);
+        createCube(0,0,0);
+        //createCube(0,0,1);
 
-        createCube(2,2);
-        createCube(3,2);
-        createCube(2,3);
-        createCube(3,3);
+        //level 1
+        levels[1] = create2DArray(rows[1]);
+        createCube(1,0,0);
+        createCube(1,0,1);
+        createCube(1,1,0);
+        createCube(1,1,1);
+
+        //level 2
+        levels[2] = create2DArray(rows[2]);
+        createCube(2,0,0);
+        createCube(2,0,1);
+        createCube(2,1,1);
+        createCube(2,1,2);
+        createCube(2,2,2);
+        createCube(2,2,3);
+
+        //level 3
+        levels[3] = create2DArray(rows[3]);
+        createCube(3,0,0);
+        createCube(3,0,1);
+        createCube(3,0,2);
+        createCube(3,1,1);
+        createCube(3,1,2);
+        createCube(3,1,3);
+
+        //level 4
+        levels[4] = create2DArray(rows[4]);
+        createCube(4,0,1);
+        createCube(4,1,0);
+        createCube(4,1,1);
+        createCube(4,1,2);
+        createCube(4,2,1);
+        createCube(4,2,2);
+        createCube(4,2,3);
+        createCube(4,3,2);
+
+        //level 5
+        levels[5] = create2DArray(rows[5]);
+        createCube(5,0,0);
+        createCube(5,0,1);
+        createCube(5,0,2);
+        createCube(5,1,0);
+        createCube(5,1,1);
+        createCube(5,1,2);
+        createCube(5,2,0);
+        createCube(5,2,1);
+        createCube(5,2,2);
+
+        function addCubesToScene(level) {
+            for (var x = 0; x < rows[level]; ++x)
+            {
+                for (var z = 0; z < clms[level]; ++z)
+                {
+                    if ( levels[level][x][z] )
+                    {
+                        scene.add(levels[level][x][z]);
+                    }
+                }
+            }
+        }
+
+        addCubesToScene(currLevel);
 
         // position and point the camera to the center of the scene
-        camera.position.x = -30;
-        camera.position.y = 40;
-        camera.position.z = 30;
+        camera.position.x = -10;
+        camera.position.y = 60;
+        camera.position.z = 10;
         camera.lookAt(scene.position);
 
         // add spotlight for the shadows
@@ -103,9 +153,6 @@
 
         // add the output of the renderer to the html element
         document.getElementById("WebGL-output").appendChild(renderer.domElement);
-
-        // call the render function
-        requestAnimationFrame(render);
 
         function initStats() {
 
@@ -126,22 +173,26 @@
         var raycaster = new THREE.Raycaster();
         var mouse = new THREE.Vector2();
 
+        //Set up callbacks
         window.addEventListener( 'mousemove', onMouseMove, false );
         window.addEventListener( 'mousedown', onMouseDown, false );
+        // call the render function
         //window.requestAnimationFrame(render);
+        requestAnimationFrame(render);
 
         function onMouseMove( event ) {
 
             // calculate mouse position in normalized device coordinates
             // (-1 to +1) for both components
 
+            //console.log("mouse.x: " + event.clientX + ", mouse.y: " + event.clientY);
             mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
             mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
         }
 
         function onMouseDown() {
 
-            // update the picking ray with the camera and mouse position
+            // Update the picking ray with the camera and mouse position
             raycaster.setFromCamera( mouse, camera );
 
             // calculate objects intersecting the picking ray
@@ -161,13 +212,19 @@
 
             stats.update();
 
-//            cube.rotation.x += 0.02;
-//            cube.rotation.y += 0.02;
-//            cube.rotation.z += 0.02;
-           
             renderer.render( scene, camera );
 
             requestAnimationFrame(render);
+        }
+
+        function create2DArray(rows) {
+            var arr = [];
+
+            for (var i=0;i<rows;i++) {
+                arr[i] = [];
+            }
+
+            return arr;
         }
    }
    window.onload = init;
