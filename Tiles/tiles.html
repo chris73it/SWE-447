@@ -55,9 +55,9 @@
         var SIDE = 80.0;
         var HEIGHT = 5;
         var SPACE = 10;
-        function createCube(level,x,z) {
+        function addTileToLevel(level,x,z) {
             var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
-            var cubeMaterial = new THREE.MeshLambertMaterial({color: 0x00ff00});
+            var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xff0000});
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.castShadow = true;
 
@@ -66,70 +66,68 @@
             cube.position.y = 1.0;
             cube.position.z = SIDE * z;
 
-            //scene.add(cube);
             levels[level][x][z] = cube;
-            return cube;
         }
 
         //level 0
-        levels[0] = create2DArray(rows[0]);
-        createCube(0,0,0);
-        //createCube(0,0,1);
+        levels[0] = create2DArray(rows[0], clms[0]);
+        addTileToLevel(0,0,0);
+        addTileToLevel(0,0,1);
 
         //level 1
-        levels[1] = create2DArray(rows[1]);
-        createCube(1,0,0);
-        createCube(1,0,1);
-        createCube(1,1,0);
-        createCube(1,1,1);
+        levels[1] = create2DArray(rows[1], clms[1]);
+        addTileToLevel(1,0,0);
+        addTileToLevel(1,0,1);
+        addTileToLevel(1,1,0);
+        addTileToLevel(1,1,1);
 
         //level 2
-        levels[2] = create2DArray(rows[2]);
-        createCube(2,0,0);
-        createCube(2,0,1);
-        createCube(2,1,1);
-        createCube(2,1,2);
-        createCube(2,2,2);
-        createCube(2,2,3);
+        levels[2] = create2DArray(rows[2], clms[2]);
+        addTileToLevel(2,0,0);
+        addTileToLevel(2,0,1);
+        addTileToLevel(2,1,1);
+        addTileToLevel(2,1,2);
+        addTileToLevel(2,2,2);
+        addTileToLevel(2,2,3);
 
         //level 3
-        levels[3] = create2DArray(rows[3]);
-        createCube(3,0,0);
-        createCube(3,0,1);
-        createCube(3,0,2);
-        createCube(3,1,1);
-        createCube(3,1,2);
-        createCube(3,1,3);
+        levels[3] = create2DArray(rows[3], clms[3]);
+        addTileToLevel(3,0,0);
+        addTileToLevel(3,0,1);
+        addTileToLevel(3,0,2);
+        addTileToLevel(3,1,1);
+        addTileToLevel(3,1,2);
+        addTileToLevel(3,1,3);
 
         //level 4
-        levels[4] = create2DArray(rows[4]);
-        createCube(4,0,1);
-        createCube(4,1,0);
-        createCube(4,1,1);
-        createCube(4,1,2);
-        createCube(4,2,1);
-        createCube(4,2,2);
-        createCube(4,2,3);
-        createCube(4,3,2);
+        levels[4] = create2DArray(rows[4], clms[4]);
+        addTileToLevel(4,0,1);
+        addTileToLevel(4,1,0);
+        addTileToLevel(4,1,1);
+        addTileToLevel(4,1,2);
+        addTileToLevel(4,2,1);
+        addTileToLevel(4,2,2);
+        addTileToLevel(4,2,3);
+        addTileToLevel(4,3,2);
 
         //level 5
-        levels[5] = create2DArray(rows[5]);
-        createCube(5,0,0);
-        createCube(5,0,1);
-        createCube(5,0,2);
-        createCube(5,1,0);
-        createCube(5,1,1);
-        createCube(5,1,2);
-        createCube(5,2,0);
-        createCube(5,2,1);
-        createCube(5,2,2);
+        levels[5] = create2DArray(rows[5], clms[5]);
+        addTileToLevel(5,0,0);
+        addTileToLevel(5,0,1);
+        addTileToLevel(5,0,2);
+        addTileToLevel(5,1,0);
+        addTileToLevel(5,1,1);
+        addTileToLevel(5,1,2);
+        addTileToLevel(5,2,0);
+        addTileToLevel(5,2,1);
+        addTileToLevel(5,2,2);
 
-        function addCubesToScene(level) {
+        function addTilesToScene(level) {
             for (var x = 0; x < rows[level]; ++x)
             {
                 for (var z = 0; z < clms[level]; ++z)
                 {
-                    if ( levels[level][x][z] )
+                    if ( levels[level][x][z] != undefined )
                     {
                         scene.add(levels[level][x][z]);
                     }
@@ -137,7 +135,22 @@
             }
         }
 
-        addCubesToScene(currLevel);
+        function removeAllTilesFromScene(level) {
+            for (var x = 0; x < rows[level]; ++x)
+            {
+                for (var z = 0; z < clms[level]; ++z)
+                {
+                    if (levels[level][x][z] != undefined)
+                    {
+                        scene.remove(levels[level][x][z]);
+                        levels[level][x][z] = undefined;
+                    }
+                }
+            }
+        }
+
+        //removeAllTilesFromScene(currLevel);
+        addTilesToScene(currLevel);
 
         // position and point the camera to the center of the scene
         camera.position.x = -10;
@@ -177,8 +190,8 @@
         window.addEventListener( 'mousemove', onMouseMove, false );
         window.addEventListener( 'mousedown', onMouseDown, false );
         // call the render function
-        //window.requestAnimationFrame(render);
-        requestAnimationFrame(render);
+        window.requestAnimationFrame(render);
+        //requestAnimationFrame(render);
 
         function onMouseMove( event ) {
 
@@ -195,15 +208,121 @@
             // Update the picking ray with the camera and mouse position
             raycaster.setFromCamera( mouse, camera );
 
-            // calculate objects intersecting the picking ray
-            var intersects = raycaster.intersectObjects( scene.children );
-
+            // calculate coordinates of object intersecting the picking ray
+            var intersects = raycaster.intersectObjects( scene.children, false );
+            var foundObject = undefined;
             for ( var i = 0; i < intersects.length; i++ )
             {
                 if (intersects[ i ].object instanceof THREE.Mesh)
                 {
-                    intersects[ i ].object.material.color.set( 0xffffff );
+                    foundObject = intersects[i].object;
                     console.log("mouse.x: " + mouse.x + " , mouse.y: " + mouse.y);
+                    break;
+                }
+            }
+
+            if (foundObject === undefined)
+            {
+                console.log("no object found");
+                return;
+            }
+
+            var found = false;
+            for ( var x = 0; x < rows[currLevel]; x++ )
+            {
+                for ( var z = 0; z < clms[currLevel]; z++ )
+                {
+                    if (foundObject === levels[currLevel][x][z])
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found)
+                {
+                    console.log("tile x: " + x + " z: " + z);
+                    swapTiles(x,z);
+                    if (isLevelComplete() == true)
+                    {
+                        removeAllTilesFromScene(currLevel);
+
+                        if (isGameComplete() == true)
+                        {
+                            //restart from scratch
+                            currLevel = 0;
+                        }
+                        else
+                        {
+                            currLevel++;
+                        }
+
+                        addTilesToScene(currLevel);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function isLevelComplete() {
+            for ( var x = 0; x < rows[currLevel]; x++ )
+            {
+                for ( var z = 0; z < clms[currLevel]; z++ )
+                {
+                    if ( levels[currLevel][x][z] && levels[currLevel][x][z].material.color.getHex() == 0xff0000 )
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isGameComplete() {
+            if (currLevel == levels.length -1 )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        function swapTiles(x,z) {
+            for ( var _x = 0; _x < rows[currLevel]; _x++ )
+            {
+                for ( var _z = 0; _z < clms[currLevel]; _z++ )
+                {
+                    if (x == _x && z == _z)
+                    {/*do nothing*/
+                        console.log("same x and z: do nothing");
+                    }
+                    else if (x == _x)
+                    {
+                        console.log("same x [x:" + _x + ",z:" + _z + "]");
+                        swapColor(_x,_z);
+                    }
+                    else if (z == _z)
+                    {
+                        console.log("same z [x:" + _x + ",z:" + _z + "]");
+                        swapColor(_x,_z);
+                    }
+                }
+            }
+        }
+
+        function swapColor(x,z) {
+            if ( levels[currLevel][x][z] )
+            {
+                if (levels[currLevel][x][z].material.color.getHex() == 0x00ff00 )
+                {
+                    console.log("[x:" + x + ",z:" + z + "] now green: " + levels[currLevel][x][z].material.color.getHex());
+                    levels[currLevel][x][z].material.color.setHex( 0xff0000 );
+                }
+                else
+                {
+                    console.log("[x:" + x + ",z:" + z + "] now red: " + levels[currLevel][x][z].material.color.getHex());
+                    levels[currLevel][x][z].material.color.setHex( 0x00ff00 );
                 }
             }
         }
@@ -217,11 +336,14 @@
             requestAnimationFrame(render);
         }
 
-        function create2DArray(rows) {
+        function create2DArray(rows,clms) {
             var arr = [];
 
-            for (var i=0;i<rows;i++) {
-                arr[i] = [];
+            for (var x = 0; x < rows; ++x) {
+                arr[x] = [];
+                for (var z = 0; z < clms; ++z) {
+                    arr[x][z] = undefined;
+                }
             }
 
             return arr;
