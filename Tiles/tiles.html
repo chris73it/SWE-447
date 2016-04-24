@@ -33,7 +33,7 @@
 
         var stats = initStats();
 
-        var currLevel = 0;
+        var currLevel = 5;
         var levels = [];
         var rows = [1, 2, 3, 2, 4, 3];
         var clms = [2, 2, 4, 4, 4, 3];
@@ -62,9 +62,9 @@
             cube.castShadow = true;
 
             // position the cube
-            cube.position.x = SIDE * x;
+            cube.position.x = SIDE * (x-1);
             cube.position.y = 1.0;
-            cube.position.z = SIDE * z;
+            cube.position.z = SIDE * (z-1);
 
             levels[level][x][z] = cube;
         }
@@ -116,10 +116,10 @@
         addTileToLevel(5,0,1);
         addTileToLevel(5,0,2);
         addTileToLevel(5,1,0);
-        addTileToLevel(5,1,1);
+        //addTileToLevel(5,1,1);
         addTileToLevel(5,1,2);
         addTileToLevel(5,2,0);
-        addTileToLevel(5,2,1);
+        //addTileToLevel(5,2,1);
         addTileToLevel(5,2,2);
 
         function addTilesToScene(level) {
@@ -289,12 +289,40 @@
         }
 
         function swapTiles(x,z) {
+            for ( var _x = x-1; _x >= 0; _x-- )
+            {
+                if ( levels[currLevel][_x][z] == undefined )
+                    break;
+                swapColor(_x,z);
+            }
+            for ( var _x = x+1; _x < rows[currLevel]; _x++ )
+            {
+                if ( levels[currLevel][_x][z] == undefined )
+                    break;
+                swapColor(_x,z);
+            }
+
+            for ( var _z = z-1; _z >= 0; _z-- )
+            {
+                if ( levels[currLevel][x][_z] == undefined )
+                    break;
+                swapColor(x,_z);
+            }
+            for ( var _z = z+1; _z < clms[currLevel]; _z++ )
+            {
+                if ( levels[currLevel][x][_z] == undefined )
+                    break;
+                swapColor(x,_z);
+            }
+        }
+        
+        /*function swapTiles(x,z) {
             for ( var _x = 0; _x < rows[currLevel]; _x++ )
             {
                 for ( var _z = 0; _z < clms[currLevel]; _z++ )
                 {
                     if (x == _x && z == _z)
-                    {/*do nothing*/
+                    {//do nothing
                         console.log("same x and z: do nothing");
                     }
                     else if (x == _x)
@@ -309,7 +337,7 @@
                     }
                 }
             }
-        }
+        }*/
 
         function swapColor(x,z) {
             if ( levels[currLevel][x][z] )
