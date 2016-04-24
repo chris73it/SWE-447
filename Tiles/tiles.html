@@ -33,7 +33,7 @@
 
         var stats = initStats();
 
-        var currLevel = 5;
+        var currLevel = 0;
         var levels = [];
         var rows = [1, 2, 3, 2, 4, 3];
         var clms = [2, 2, 4, 4, 4, 3];
@@ -42,7 +42,6 @@
         var scene = new THREE.Scene();
 
         // create a camera, which defines where we're looking at.
-        //var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
         // create a render and set the size
         var renderer = new THREE.WebGLRenderer();
@@ -62,9 +61,9 @@
             cube.castShadow = true;
 
             // position the cube
-            cube.position.x = SIDE * (x-1);
+            cube.position.x = SIDE * ( x - (rows[currLevel]-1) / 2 );
             cube.position.y = 1.0;
-            cube.position.z = SIDE * (z-1);
+            cube.position.z = SIDE * ( z - (clms[currLevel]-1) / 2 );
 
             levels[level][x][z] = cube;
         }
@@ -116,11 +115,8 @@
         addTileToLevel(5,0,1);
         addTileToLevel(5,0,2);
         addTileToLevel(5,1,0);
-        //addTileToLevel(5,1,1);
         addTileToLevel(5,1,2);
         addTileToLevel(5,2,0);
-        //addTileToLevel(5,2,1);
-        addTileToLevel(5,2,2);
 
         function addTilesToScene(level) {
             for (var x = 0; x < rows[level]; ++x)
@@ -142,25 +138,25 @@
                 {
                     if (levels[level][x][z] != undefined)
                     {
+                        levels[level][x][z].material.color.setHex( 0xff0000 );
                         scene.remove(levels[level][x][z]);
-                        levels[level][x][z] = undefined;
                     }
                 }
             }
         }
 
-        //removeAllTilesFromScene(currLevel);
         addTilesToScene(currLevel);
 
         // position and point the camera to the center of the scene
-        camera.position.x = -10;
+        camera.position.x = -10; //SIDE * (rows[currLevel]-1) / 2; //-10;
         camera.position.y = 60;
-        camera.position.z = 10;
+        camera.position.z = 10; //SIDE * (clms[currLevel]-1) / 2; //10;
         camera.lookAt(scene.position);
 
         // add spotlight for the shadows
         var spotLight = new THREE.SpotLight(0xffffff);
         spotLight.position.set(-40, 60, -10);
+        //spotLight.position.set(camera.position.x, camera.position.y, camera.position.z);
         spotLight.castShadow = true;
         scene.add(spotLight);
 
@@ -316,40 +312,15 @@
             }
         }
         
-        /*function swapTiles(x,z) {
-            for ( var _x = 0; _x < rows[currLevel]; _x++ )
-            {
-                for ( var _z = 0; _z < clms[currLevel]; _z++ )
-                {
-                    if (x == _x && z == _z)
-                    {//do nothing
-                        console.log("same x and z: do nothing");
-                    }
-                    else if (x == _x)
-                    {
-                        console.log("same x [x:" + _x + ",z:" + _z + "]");
-                        swapColor(_x,_z);
-                    }
-                    else if (z == _z)
-                    {
-                        console.log("same z [x:" + _x + ",z:" + _z + "]");
-                        swapColor(_x,_z);
-                    }
-                }
-            }
-        }*/
-
         function swapColor(x,z) {
             if ( levels[currLevel][x][z] )
             {
                 if (levels[currLevel][x][z].material.color.getHex() == 0x00ff00 )
                 {
-                    console.log("[x:" + x + ",z:" + z + "] now green: " + levels[currLevel][x][z].material.color.getHex());
                     levels[currLevel][x][z].material.color.setHex( 0xff0000 );
                 }
                 else
                 {
-                    console.log("[x:" + x + ",z:" + z + "] now red: " + levels[currLevel][x][z].material.color.getHex());
                     levels[currLevel][x][z].material.color.setHex( 0x00ff00 );
                 }
             }
