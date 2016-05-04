@@ -35,7 +35,9 @@
 
         var currLevel = 0;
         var levels = [];
+        
         var rows = [1, 2, 3, 2, 4, 3];
+        
         var clms = [2, 2, 4, 4, 4, 3];
 
         // create a scene, that will hold all our elements such as objects, cameras and lights.
@@ -43,7 +45,7 @@
 
         // create a camera, which defines where we're looking at.
         var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
-        // create a render and set the size
+        // create a renderer and set the size
         var renderer = new THREE.WebGLRenderer();
 
         renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
@@ -51,19 +53,21 @@
         renderer.shadowMapEnabled = true;
 
         // create cubes
-        var SIDE = 80.0;
+        var SIDE = 160.0;
         var HEIGHT = 5;
         var SPACE = 10;
         function addTileToLevel(level,x,z) {
             var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
-            var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xff0000});
+            var cubeMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
+
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.castShadow = true;
 
             // position the cube
-            cube.position.x = SIDE * ( x - (rows[currLevel]-1) / 2 );
+            cube.position.x = SIDE * ( x - (rows[level]) / 2 +0.5);
             cube.position.y = 1.0;
-            cube.position.z = SIDE * ( z - (clms[currLevel]-1) / 2 );
+            cube.position.z = SIDE * ( z - (clms[level]) / 2 +0.5);
+            console.log("(" + x + "," + z + ") x: " + cube.position.x + ", z: " + cube.position.z);
 
             levels[level][x][z] = cube;
         }
@@ -147,15 +151,38 @@
 
         addTilesToScene(currLevel);
 
+        /*Grid of cubes to help positioning
+        for (var i = -2; i <= 2; ++i) {
+        for (var j = -2; j <= 2; ++j) {
+            var cubeGeometry = new THREE.BoxGeometry(36, HEIGHT, 26);
+            var cubeMaterial;
+             if (i == -2 && j == -2) {
+                cubeMaterial = new THREE.MeshPhongMaterial({color: 0xffff00});//yellow
+            } else if (i == 2 && j == 2) {
+                cubeMaterial = new THREE.MeshPhongMaterial({color: 0x00ffff});//cyan
+            } else {
+                cubeMaterial = new THREE.MeshPhongMaterial({color: 0x00ff00});//green
+            }
+            var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.castShadow = true;
+            cube.position.x = i * 40;
+            cube.position.y = 1.0
+            cube.position.z = j * 40;
+            scene.add(cube);
+        }}*/
         // position and point the camera to the center of the scene
-        camera.position.x = -10; //SIDE * (rows[currLevel]-1) / 2; //-10;
-        camera.position.y = 60;
-        camera.position.z = 10; //SIDE * (clms[currLevel]-1) / 2; //10;
+//        camera.position.x = -10; //SIDE * (rows[currLevel]-1) / 2; //-10;
+//        camera.position.y = 100;
+//        camera.position.z = 10; //SIDE * (clms[currLevel]-1) / 2; //10;
+        camera.position.x = 0;
+        camera.position.y = 100;
+        camera.position.z = 0;
         camera.lookAt(scene.position);
 
         // add spotlight for the shadows
         var spotLight = new THREE.SpotLight(0xffffff);
-        spotLight.position.set(-40, 60, -10);
+//        spotLight.position.set(-40, 60, -10);
+        spotLight.position.set(0, 400, 0);
         //spotLight.position.set(camera.position.x, camera.position.y, camera.position.z);
         spotLight.castShadow = true;
         scene.add(spotLight);
