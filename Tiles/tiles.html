@@ -222,7 +222,7 @@
             mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
         }
 
-        var DELTA_ANGLE = 0.01;
+        var DELTA_ANGLE = 0.04;
         var found;//FIXME: Change the name!
         var rotation;
         var __x, __z;
@@ -378,7 +378,7 @@
                 if (rotation > 0 && rotation < 1.57) {
                     rotateTiles(__x,__z);//FIXME: where x and z come from?
                     rotation += DELTA_ANGLE;
-                } else if (rotation >= 1.57 && rotation < 1.571) {
+                } else if (rotation >= 1.57 && rotation < 1.61) {
                     swapTiles(__x,__z);
                     rotateTiles(__x,__z);
                     rotation += DELTA_ANGLE;
