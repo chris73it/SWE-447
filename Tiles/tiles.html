@@ -66,7 +66,8 @@
                 alert('load error');
             });*/
 
-        var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+        //var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+        var cubeMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
         var textureLoader = new THREE.TextureLoader();
         var url = '../assets/textures/general/metal-floor.jpg';
         textureLoader.load(url, function(tex){
