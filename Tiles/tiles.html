@@ -59,7 +59,7 @@
         // create cubes
         var SIDE = 160.0;
         var HEIGHT = 5;
-        var SPACE = 10;
+        var SPACE = 64;
         function addTileToLevel(level,x,z) {
             var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
             var cubeMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
@@ -71,7 +71,7 @@
             cube.position.x = SIDE * ( x - (rows[level]) / 2 +0.5);
             cube.position.y = 1.0;
             cube.position.z = SIDE * ( z - (clms[level]) / 2 +0.5);
-            console.log("(" + x + "," + z + ") x: " + cube.position.x + ", z: " + cube.position.z);
+            //console.log("(" + x + "," + z + ") x: " +cube.position.x + ", z: " + cube.position.z);
 
             levels[level][x][z] = cube;
         }
@@ -222,7 +222,12 @@
             mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
         }
 
+        var DELTA_ANGLE = 0.01;
+        var found;//FIXME: Change the name!
+        var rotation;
+        var __x, __z;
         function onMouseDown() {
+            if (found === true) return;
 
             // Update the picking ray with the camera and mouse position
             raycaster.setFromCamera( mouse, camera );
@@ -235,7 +240,7 @@
                 if (intersects[ i ].object instanceof THREE.Mesh)
                 {
                     foundObject = intersects[i].object;
-                    console.log("mouse.x: " + mouse.x + " , mouse.y: " + mouse.y);
+                    //console.log("mouse.x: " + mouse.x + " , mouse.y: " + mouse.y);
                     break;
                 }
             }
@@ -246,65 +251,55 @@
                 return;
             }
 
-            var found = false;
+            found = false;
+            rotation = 0;
             for ( var x = 0; x < rows[currLevel]; x++ )
             {
                 for ( var z = 0; z < clms[currLevel]; z++ )
                 {
                     if (foundObject === levels[currLevel][x][z])
-                    {
+                    {console.log("OBJECT FOUND");
                         found = true;
+                        rotation = DELTA_ANGLE;
+                        __x = x;
+                        __z = z;
                         break;
                     }
                 }
-                if (found)
-                {
-                    console.log("tile x: " + x + " z: " + z);
-                    swapTiles(x,z);
-                    if (isLevelComplete() == true)
-                    {
-                        removeAllTilesFromScene(currLevel);
+            }
+        }
 
-                        if (isGameComplete() == true)
-                        {
-                            //restart from scratch
-                            currLevel = 0;
-                        }
-                        else
-                        {
-                            currLevel++;
-                        }
-
-                        addTilesToScene(currLevel);
-                    }
+        function rotateTiles(x,z, radiants) {
+            for ( var _x = x-1; _x >= 0; _x-- )
+            {
+                if ( levels[currLevel][_x][z] == undefined )
                     break;
-                }
+                rotateTile(_x,z);
+            }
+            for ( var _x = x+1; _x < rows[currLevel]; _x++ )
+            {
+                if ( levels[currLevel][_x][z] == undefined )
+                    break;
+                rotateTile(_x,z);
+            }
+
+            for ( var _z = z-1; _z >= 0; _z-- )
+            {
+                if ( levels[currLevel][x][_z] == undefined )
+                    break;
+                rotateTile(x,_z);
+            }
+            for ( var _z = z+1; _z < clms[currLevel]; _z++ )
+            {
+                if ( levels[currLevel][x][_z] == undefined )
+                    break;
+                rotateTile(x,_z);
             }
         }
 
-        function isLevelComplete() {
-            for ( var x = 0; x < rows[currLevel]; x++ )
-            {
-                for ( var z = 0; z < clms[currLevel]; z++ )
-                {
-                    if ( levels[currLevel][x][z] && levels[currLevel][x][z].material.color.getHex() == 0xff0000 )
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-        function isGameComplete() {
-            if (currLevel == levels.length -1 )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+        function rotateTile(x,z) {
+            levels[currLevel][x][z].rotation.x = rotation;
+            levels[currLevel][x][z].rotation.y = rotation;
         }
 
         function swapTiles(x,z) {
@@ -334,7 +329,7 @@
                 swapColor(x,_z);
             }
         }
-        
+
         function swapColor(x,z) {
             if ( levels[currLevel][x][z] )
             {
@@ -349,9 +344,69 @@
             }
         }
 
+        function isLevelComplete() {
+            for ( var x = 0; x < rows[currLevel]; x++ )
+            {
+                for ( var z = 0; z < clms[currLevel]; z++ )
+                {
+                    if ( levels[currLevel][x][z] && levels[currLevel][x][z].material.color.getHex() == 0xff0000 )
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isGameComplete() {
+            if (currLevel == levels.length -1 )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         function render() {
 
             stats.update();
+            if (found)
+            {
+                console.log("found tile x: " + __x + " z: " + __z + " rot: " + rotation);
+                if (rotation > 0 && rotation < 1.57) {
+                    rotateTiles(__x,__z);//FIXME: where x and z come from?
+                    rotation += DELTA_ANGLE;
+                } else if (rotation >= 1.57 && rotation < 1.571) {
+                    swapTiles(__x,__z);
+                    rotateTiles(__x,__z);
+                    rotation += DELTA_ANGLE;
+                } else if (rotation < 3.14) {
+                    rotateTiles(__x,__z);
+                    rotation += DELTA_ANGLE;
+                } else if (rotation >= 3.14) {
+                    rotation = 0;
+                    rotateTiles(__x,__z);
+                    found = false;
+                    if (isLevelComplete() == true)
+                    {
+                        removeAllTilesFromScene(currLevel);
+
+                        if (isGameComplete() == true)
+                        {
+                            //restart from scratch
+                            currLevel = 0;
+                        }
+                        else
+                        {
+                            currLevel++;
+                        }
+
+                        addTilesToScene(currLevel);
+                    }
+                }
+            }
 
             renderer.render( scene, camera );
 
