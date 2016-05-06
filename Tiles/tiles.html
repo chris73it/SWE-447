@@ -56,12 +56,15 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMapEnabled = true;
 
+        //var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
+        //var cubeMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
+
         // create cubes
         var SIDE = 160.0;
         var HEIGHT = 5;
         var SPACE = 64;
         function addTileToLevel(level,x,z) {
-            var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
+            var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0,HEIGHT,SIDE - SPACE / 2.0);
             var cubeMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
 
             var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
@@ -125,6 +128,17 @@
         addTileToLevel(5,1,0);
         addTileToLevel(5,1,2);
         addTileToLevel(5,2,0);
+
+        //Reset button
+        var cubeGeometry = new THREE.BoxGeometry(SIDE - SPACE / 2.0, HEIGHT, SIDE - SPACE / 2.0);
+        var cubeMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } );
+        var resetButton = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        resetButton.castShadow = true;
+        // position the reset button
+        resetButton.position.x = -2 * SIDE;
+        resetButton.position.y = 1.0;
+        resetButton.position.z = 2 * SIDE;
+        scene.add(resetButton);
 
         function addTilesToScene(level) {
             for (var x = 0; x < rows[level]; ++x)
@@ -208,9 +222,7 @@
         //Set up callbacks
         window.addEventListener( 'mousemove', onMouseMove, false );
         window.addEventListener( 'mousedown', onMouseDown, false );
-        // call the render function
         window.requestAnimationFrame(render);
-        //requestAnimationFrame(render);
 
         function onMouseMove( event ) {
 
@@ -223,7 +235,7 @@
         }
 
         var DELTA_ANGLE = 0.04;
-        var found;//FIXME: Change the name!
+        var found;
         var rotation;
         var __x, __z;
         function onMouseDown() {
@@ -248,6 +260,12 @@
             if (foundObject === undefined)
             {
                 console.log("no object found");
+                return;
+            }
+
+            if (foundObject === resetButton) {
+                removeAllTilesFromScene(currLevel);
+                addTilesToScene(currLevel);
                 return;
             }
 
@@ -376,7 +394,7 @@
             {
                 console.log("found tile x: " + __x + " z: " + __z + " rot: " + rotation);
                 if (rotation > 0 && rotation < 1.57) {
-                    rotateTiles(__x,__z);//FIXME: where x and z come from?
+                    rotateTiles(__x,__z);
                     rotation += DELTA_ANGLE;
                 } else if (rotation >= 1.57 && rotation < 1.61) {
                     swapTiles(__x,__z);
